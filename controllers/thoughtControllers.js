@@ -29,7 +29,7 @@ module.exports = {
         try {
             const newThought = await Thought.create(req.body)
 
-            newThought ? res.status(200).json(newThought) : res.status(404).json({ msg: 'Malformed request body.' })
+            newThought ? res.status(200).json(newThought) : res.status(400).json({ msg: 'Malformed request body.' })
 
             await User.findOneAndUpdate(
                 { _id: req.body.userId },
@@ -47,11 +47,11 @@ module.exports = {
         const id = req.params.id;
         try {
             const updThought = await Thought.findOneAndUpdate(
-                {_id : id},
-                {$set : req.body},
+                { _id: id },
+                { $set: req.body },
                 { runValidators: true, new: true }
             )
-            
+
             updThought ? res.status(200).json(updThought) : res.status(404).json({ msg: `No thought with ID '${id}'` })
 
 
@@ -64,7 +64,7 @@ module.exports = {
     async removeThought(req, res) {
         const id = req.params.id;
         try {
-            const delThought = await Thought.findOneAndDelete({_id:id})
+            const delThought = await Thought.findOneAndDelete({ _id: id })
 
             delThought ? res.status(200).json(delThought) : res.status(404).json({ msg: `No thought with ID '${id}'` })
 
@@ -72,5 +72,40 @@ module.exports = {
             console.trace(err);
             res.status(500).json(err);
         }
+    },
+
+    async addReaction(req, res) {
+        const id = req.params.id;
+        try {
+            const thought = await Thought.findOneAndUpdate(
+                { _id: id },
+                { $push: { reactions: req.body } },
+                { runValidators: true, new: true }
+            )
+
+            thought ? res.status(200).json(thought) : res.status(404).json({ msg: `No thought with ID '${id}'` })
+
+        } catch (err) {
+            console.trace(err);
+            res.status(500).json(err);
+        }
+    },
+
+    async removeReaction(req, res) {
+        const id = req.params.id
+        try {
+            const thought = await Thought.findOneAndUpdate(
+                { _id: id },
+                { $pull: { reactions: { reactionId: req.body.reactionId } } },
+                { runValidators: true, new: true }
+            )
+
+            thought ? res.status(200).json(thought) : res.status(404).json({ msg: `No thought with ID '${id}'` })
+
+        } catch (err) {
+            console.trace(err);
+            res.status(500).json(err);
+        }
+
     }
 }
